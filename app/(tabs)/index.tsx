@@ -1,98 +1,146 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { FeatureCard } from '@/components/ui/feature-card';
+import { Waveform } from '@/components/ui/waveform';
+import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.title, { color: colors.text }]}>Voice Booster</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Enhance your audio quality
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.crownButton, { backgroundColor: colors.backgroundSecondary }]}
+            onPress={() => router.push('/premium')}
+          >
+            <Ionicons name="trophy" size={24} color={colors.accent} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Demo Audio Card */}
+        <View
+          style={[
+            styles.demoCard,
+            {
+              backgroundColor: colors.backgroundSecondary,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <View style={styles.demoHeader}>
+            <Waveform height={60} width={200} />
+            <Text style={[styles.demoTitle, { color: colors.accent }]}>
+              Play Demo Audio
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.playButton, { backgroundColor: colors.primary }]}
+            onPress={() => router.push('/player')}
+          >
+            <Ionicons name="play" size={32} color={colors.background} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Feature Cards */}
+        <View style={styles.featuresContainer}>
+          <FeatureCard
+            title="Noise Reducer"
+            icon={<Ionicons name="mic-off" size={28} color={colors.primary} />}
+            onPress={() => router.push('/noise-reducer')}
+            backgroundColor={colors.card}
+          />
+
+          <FeatureCard
+            title="Split Music & Vocal"
+            icon={<Ionicons name="musical-notes" size={28} color={colors.primary} />}
+            onPress={() => router.push('/split-audio')}
+            backgroundColor={colors.card}
+          />
+
+          <FeatureCard
+            title="Record Audio"
+            icon={<Ionicons name="mic" size={28} color={colors.accent} />}
+            onPress={() => router.push('/record')}
+            backgroundColor={colors.card}
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: Spacing.xl,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    ...Typography.h1,
+    marginBottom: Spacing.xs,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  subtitle: {
+    ...Typography.body,
+  },
+  crownButton: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  demoCard: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+    borderWidth: 1,
+  },
+  demoHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  demoTitle: {
+    ...Typography.h4,
+    marginTop: Spacing.md,
+  },
+  playButton: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  featuresContainer: {
+    gap: Spacing.md,
   },
 });
+
