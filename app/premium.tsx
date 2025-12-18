@@ -112,7 +112,6 @@ export default function PremiumScreen() {
                     : colors.card,
                   borderColor: tier.highlighted ? colors.primary : 'rgba(168, 85, 247, 0.2)',
                   borderWidth: tier.highlighted ? 2 : 1,
-                  borderWidth: tier.highlighted ? 2 : 1,
                 },
               ]}
             >
