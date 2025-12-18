@@ -35,7 +35,7 @@ export default function NoiseReducerScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundSecondary }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>

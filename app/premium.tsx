@@ -58,7 +58,7 @@ export default function PremiumScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundSecondary }]}>
         <View style={{ width: 40 }} />

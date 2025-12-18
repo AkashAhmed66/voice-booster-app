@@ -7,7 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 
 export default function ModalScreen() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right', 'bottom']}>
       <ThemedView style={styles.container}>
         <ThemedText type="title">This is a modal</ThemedText>
         <Link href="/" dismissTo style={styles.link}>
