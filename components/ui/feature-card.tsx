@@ -1,5 +1,6 @@
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -11,8 +12,9 @@ interface FeatureCardProps {
 }
 
 export function FeatureCard({ title, icon, onPress, backgroundColor }: FeatureCardProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
+  const isDark = colorScheme === 'dark';
 
   return (
     <TouchableOpacity
@@ -20,14 +22,22 @@ export function FeatureCard({ title, icon, onPress, backgroundColor }: FeatureCa
         styles.container,
         {
           backgroundColor: backgroundColor || colors.card,
-          shadowColor: colors.shadow,
+          borderColor: isDark ? 'rgba(168, 85, 247, 0.2)' : colors.border,
+          shadowColor: '#000',
         },
       ]}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>{icon}</View>
+      <View style={[styles.iconContainer, { 
+        backgroundColor: isDark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.08)'
+      }]}>
+        {icon}
+      </View>
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <View style={styles.arrow}>
+        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -35,25 +45,32 @@ export function FeatureCard({ title, icon, onPress, backgroundColor }: FeatureCa
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    padding: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     elevation: 3,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     ...Typography.h4,
+    fontWeight: '600',
     flex: 1,
+  },
+  arrow: {
+    opacity: 0.4,
   },
 });

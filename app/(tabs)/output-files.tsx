@@ -39,8 +39,8 @@ const STATIC_FILES: AudioFile[] = [
 ];
 
 export default function OutputFilesScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
   const [files] = useState<AudioFile[]>(STATIC_FILES);
 
@@ -52,9 +52,14 @@ export default function OutputFilesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, {
+          backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.05)' : 'transparent',
+          borderRadius: 12,
+          padding: colorScheme === 'dark' ? 12 : 0,
+          marginBottom: Spacing.md
+        }]}>
           <Text style={[styles.title, { color: colors.text }]}>Output Files</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.subtitle, { color: colors.primary }]}>
             {files.length} files
           </Text>
         </View>
@@ -62,17 +67,23 @@ export default function OutputFilesScreen() {
         {/* Files List */}
         {files.length > 0 ? (
           <View style={styles.filesList}>
-            {files.map((file) => (
+            {files.map((file, index) => (
               <Card
                 key={file.id}
                 onPress={() => router.push('/player')}
-                style={styles.fileCard}
+                style={[styles.fileCard, {
+                  borderColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : colors.border
+                }]}
               >
                 <View style={styles.fileContent}>
                   <View
                     style={[
                       styles.iconContainer,
-                      { backgroundColor: colors.backgroundSecondary },
+                      { 
+                        backgroundColor: colorScheme === 'dark'
+                          ? `rgba(${168 + index * 10}, 85, 247, 0.15)`
+                          : `rgba(${168 - index * 10}, 85, 247, 0.1)`,
+                      },
                     ]}
                   >
                     <Ionicons name="musical-note" size={24} color={colors.primary} />
@@ -123,33 +134,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.sm,
   },
   header: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
   },
   title: {
-    ...Typography.h1,
+    ...Typography.h2,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     ...Typography.body,
   },
   filesList: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   fileCard: {
-    padding: Spacing.md,
+    padding: Spacing.sm,
   },
   fileContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.md,
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },

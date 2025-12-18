@@ -52,8 +52,8 @@ const PRICING_TIERS: PricingTier[] = [
 ];
 
 export default function PremiumScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
 
   return (
@@ -76,7 +76,15 @@ export default function PremiumScreen() {
         <View
           style={[
             styles.iconContainer,
-            { backgroundColor: colors.accent + '20' },
+            { 
+              backgroundColor: colorScheme === 'dark' 
+                ? 'rgba(168, 85, 247, 0.15)' 
+                : 'rgba(168, 85, 247, 0.1)',
+              borderWidth: 2,
+              borderColor: colorScheme === 'dark'
+                ? 'rgba(168, 85, 247, 0.3)'
+                : 'rgba(168, 85, 247, 0.2)',
+            },
           ]}
         >
           <Ionicons name="trophy" size={64} color={colors.accent} />
@@ -84,7 +92,7 @@ export default function PremiumScreen() {
 
         {/* Title */}
         <Text style={[styles.title, { color: colors.text }]}>Voice Booster Pro</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+        <Text style={[styles.subtitle, { color: colors.primary }]}>
           Access all premium features
         </Text>
 
@@ -96,21 +104,41 @@ export default function PremiumScreen() {
               style={[
                 styles.pricingCard,
                 {
-                  backgroundColor: tier.highlighted ? colors.primary + '20' : colors.backgroundSecondary,
-                  borderColor: tier.highlighted ? colors.accent : colors.border,
+                  backgroundColor: tier.highlighted 
+                    ? (colorScheme === 'dark' 
+                        ? 'rgba(168, 85, 247, 0.1)' 
+                        : 'rgba(168, 85, 247, 0.05)')
+                    : colors.card,
+                  borderColor: tier.highlighted ? colors.primary : 'rgba(168, 85, 247, 0.2)',
+                  borderWidth: tier.highlighted ? 2 : 1,
                   borderWidth: tier.highlighted ? 2 : 1,
                 },
               ]}
             >
               <View style={styles.cardContent}>
-                <View style={styles.cardLeft}>
-                  <Text style={[styles.minutes, { color: colors.text }]}>{tier.minutes}</Text>
-                  <Text style={[styles.perMinute, { color: colors.textSecondary }]}>
-                    {tier.pricePerMinute}
-                  </Text>
+                <View style={styles.cardTop}>
+                  <View style={styles.cardLeft}>
+                    <Text style={[styles.minutes, { color: colors.text }]}>{tier.minutes}</Text>
+                    <Text style={[styles.perMinute, { color: colors.textSecondary }]}>
+                      {tier.pricePerMinute}
+                    </Text>
+                  </View>
+                  <View style={styles.cardRight}>
+                    <Text style={[styles.price, { color: colors.text }]}>{tier.price}</Text>
+                  </View>
                 </View>
-                <View style={styles.cardRight}>
-                  <Text style={[styles.price, { color: colors.text }]}>{tier.price}</Text>
+                
+                <View style={styles.cardBottom}>
+                  <View
+                    style={[
+                      styles.discountBadge,
+                      { backgroundColor: colors.accent },
+                    ]}
+                  >
+                    <Text style={[styles.discount, { color: colors.background }]}>
+                      {tier.discount} OFF
+                    </Text>
+                  </View>
                   <Text
                     style={[
                       styles.originalPrice,
@@ -119,17 +147,6 @@ export default function PremiumScreen() {
                   >
                     {tier.originalPrice}
                   </Text>
-                </View>
-                <View
-                  style={[
-                    styles.discountBadge,
-                    { backgroundColor: colors.accent },
-                  ]}
-                >
-                  <Text style={[styles.discount, { color: colors.background }]}>
-                    {tier.discount}
-                  </Text>
-                  <Text style={[styles.discountText, { color: colors.background }]}>OFF</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -177,54 +194,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   headerTitle: {
     ...Typography.h3,
   },
   closeButton: {
-    padding: Spacing.xs,
+    padding: 0,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.sm,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
+    width: 100,
+    height: 100,
     borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   title: {
     ...Typography.h2,
     textAlign: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   subtitle: {
     ...Typography.body,
     textAlign: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   pricingContainer: {
-    gap: Spacing.md,
-    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   pricingCard: {
     borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    position: 'relative',
+    padding: Spacing.md,
   },
   cardContent: {
+    gap: Spacing.md,
+  },
+  cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   cardLeft: {
     flex: 1,
@@ -241,50 +260,47 @@ const styles = StyleSheet.create({
   },
   price: {
     ...Typography.h3,
-    marginBottom: Spacing.xs,
+  },
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
   },
   originalPrice: {
     ...Typography.bodySmall,
   },
   discountBadge: {
-    position: 'absolute',
-    top: Spacing.md,
-    right: Spacing.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
   },
   discount: {
-    ...Typography.h4,
+    ...Typography.bodySmall,
     fontWeight: '700',
-    textAlign: 'center',
-  },
-  discountText: {
-    ...Typography.caption,
-    textAlign: 'center',
   },
   buyButton: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   buyButtonText: {
     ...Typography.h4,
     fontWeight: '700',
   },
   featuresContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   featuresTitle: {
     ...Typography.h3,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
   featureText: {
     ...Typography.body,

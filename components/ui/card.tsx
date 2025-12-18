@@ -11,13 +11,16 @@ interface CardProps {
 }
 
 export function Card({ children, style, onPress, elevated = true }: CardProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
+  const isDark = colorScheme === 'dark';
 
   const cardStyle: ViewStyle = {
     backgroundColor: colors.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(168, 85, 247, 0.15)' : colors.border,
     ...(elevated && {
       shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 4 },

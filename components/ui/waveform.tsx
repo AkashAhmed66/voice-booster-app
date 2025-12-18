@@ -22,12 +22,12 @@ export function Waveform({
   barGap = 2,
   animated = false,
 }: WaveformProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   
   // Generate random waveform data if not provided (for static demo)
   const waveformData = data || Array.from({ length: 50 }, () => Math.random());
-  const waveColor = color || colors.accent;
+  const waveColor = color || colors?.accent || Colors.dark.accent;
 
   return (
     <View style={[styles.container, { height, width }]}>

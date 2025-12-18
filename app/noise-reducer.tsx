@@ -8,8 +8,8 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function NoiseReducerScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -51,9 +51,20 @@ export default function NoiseReducerScreen() {
       >
         {processing ? (
           // Processing View
-          <View style={styles.processingContainer}>
-            <View style={styles.progressCircle}>
-              <Text style={[styles.progressText, { color: colors.text }]}>
+          <View style={[styles.processingContainer, {
+            backgroundColor: colorScheme === 'dark' 
+              ? 'rgba(168, 85, 247, 0.05)' 
+              : 'rgba(168, 85, 247, 0.03)',
+            borderRadius: 16,
+            padding: Spacing.lg
+          }]}>
+            <View style={[styles.progressCircle, {
+              borderColor: colors.primary,
+              backgroundColor: colorScheme === 'dark'
+                ? 'rgba(168, 85, 247, 0.1)'
+                : 'rgba(168, 85, 247, 0.05)'
+            }]}>
+              <Text style={[styles.progressText, { color: colors.primary }]}>
                 {progress.toFixed(0)}%
               </Text>
             </View>
@@ -61,7 +72,7 @@ export default function NoiseReducerScreen() {
             <Text style={[styles.processingTitle, { color: colors.text }]}>
               Say Goodbye to noise!
             </Text>
-            <Text style={[styles.processingSubtitle, { color: colors.textSecondary }]}>
+            <Text style={[styles.processingSubtitle, { color: colors.primary }]}>
               Let us denoise your audio for crystal-clear sounds!
             </Text>
 
@@ -106,12 +117,18 @@ export default function NoiseReducerScreen() {
             <View style={styles.infoContainer}>
               <Text style={[styles.infoTitle, { color: colors.text }]}>How it works</Text>
 
-              <Card style={styles.infoCard}>
+              <Card style={[styles.infoCard, {
+                borderColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : colors.border
+              }]}>
                 <View style={styles.infoItem}>
                   <View
                     style={[
                       styles.infoIcon,
-                      { backgroundColor: colors.primary + '20' },
+                      { 
+                        backgroundColor: colorScheme === 'dark'
+                          ? 'rgba(168, 85, 247, 0.15)'
+                          : 'rgba(168, 85, 247, 0.1)'
+                      },
                     ]}
                   >
                     <Ionicons name="document-text" size={24} color={colors.primary} />
@@ -207,48 +224,48 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.sm,
   },
   uploadCard: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   uploadContent: {
     alignItems: 'center',
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing.lg,
   },
   uploadTitle: {
     ...Typography.h3,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   uploadSubtitle: {
     ...Typography.body,
     textAlign: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   browseButton: {
     marginTop: Spacing.md,
   },
   infoContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   infoTitle: {
     ...Typography.h3,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   infoCard: {
-    marginBottom: Spacing.md,
-    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    padding: Spacing.sm,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   infoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.md,
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -264,15 +281,15 @@ const styles = StyleSheet.create({
   },
   processingContainer: {
     alignItems: 'center',
-    paddingVertical: Spacing.xxl,
+    paddingVertical: Spacing.xl,
   },
   progressCircle: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   progressText: {
     ...Typography.h1,
@@ -281,15 +298,15 @@ const styles = StyleSheet.create({
   processingTitle: {
     ...Typography.h2,
     textAlign: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   processingSubtitle: {
     ...Typography.body,
     textAlign: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   cancelButton: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   warningText: {
     ...Typography.bodySmall,

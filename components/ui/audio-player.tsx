@@ -16,8 +16,8 @@ export function AudioPlayer({
   duration = '00:00:08',
   currentTime = '00:00:04',
 }: AudioPlayerProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (

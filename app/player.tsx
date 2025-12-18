@@ -15,8 +15,8 @@ const ENHANCEMENT_OPTIONS = [
 ];
 
 export default function PlayerScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState('v3');
   const [volume, setVolume] = useState(100);
@@ -41,7 +41,13 @@ export default function PlayerScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Enhancement Options */}
-        <View style={styles.optionsContainer}>
+        <View style={[styles.optionsContainer, {
+          backgroundColor: colorScheme === 'dark' 
+            ? 'rgba(168, 85, 247, 0.05)' 
+            : 'transparent',
+          padding: colorScheme === 'dark' ? Spacing.sm : 0,
+          borderRadius: 12
+        }]}>
           {ENHANCEMENT_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option.id}
@@ -49,8 +55,13 @@ export default function PlayerScreen() {
                 styles.optionButton,
                 {
                   backgroundColor:
-                    selectedOption === option.id ? colors.accent : colors.backgroundSecondary,
-                  borderColor: selectedOption === option.id ? colors.accent : colors.border,
+                    selectedOption === option.id 
+                      ? colors.primary
+                      : (colorScheme === 'dark'
+                          ? 'rgba(168, 85, 247, 0.1)'
+                          : colors.backgroundSecondary),
+                  borderColor: selectedOption === option.id ? colors.primary : 'rgba(168, 85, 247, 0.2)',
+                  borderWidth: 1,
                 },
               ]}
               onPress={() => setSelectedOption(option.id)}
@@ -80,9 +91,15 @@ export default function PlayerScreen() {
         </View>
 
         {/* Rating */}
-        <View style={styles.ratingContainer}>
+        <View style={[styles.ratingContainer, {
+          backgroundColor: colorScheme === 'dark'
+            ? 'rgba(168, 85, 247, 0.05)'
+            : 'rgba(168, 85, 247, 0.03)',
+          borderRadius: 16,
+          padding: Spacing.lg
+        }]}>
           <Text style={[styles.ratingTitle, { color: colors.text }]}>Enjoyed?</Text>
-          <Text style={[styles.ratingSubtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.ratingSubtitle, { color: colors.primary }]}>
             Let us know!
           </Text>
           <View style={styles.stars}>
@@ -91,7 +108,7 @@ export default function PlayerScreen() {
                 <Ionicons
                   name={star <= rating ? 'star' : 'star-outline'}
                   size={40}
-                  color={star <= rating ? colors.accent : colors.border}
+                  color={star <= rating ? colors.primary : colors.border}
                 />
               </TouchableOpacity>
             ))}
@@ -121,12 +138,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   backButton: {
-    padding: Spacing.xs,
+    padding: 0,
   },
   headerTitle: {
     ...Typography.h3,
@@ -135,12 +152,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.sm,
   },
   optionsContainer: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   optionButton: {
     flex: 1,
@@ -155,14 +172,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   playerContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   volumeContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   ratingContainer: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   ratingTitle: {
     ...Typography.h4,
@@ -170,13 +187,13 @@ const styles = StyleSheet.create({
   },
   ratingSubtitle: {
     ...Typography.body,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   stars: {
     flexDirection: 'row',
     gap: Spacing.sm,
   },
   saveButton: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
 });

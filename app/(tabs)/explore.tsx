@@ -7,8 +7,8 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function EditorScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
 
   return (
@@ -19,9 +19,13 @@ export default function EditorScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { 
+          backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.05)' : 'transparent',
+          borderRadius: 12,
+          padding: colorScheme === 'dark' ? 12 : 0
+        }]}>
           <Text style={[styles.title, { color: colors.text }]}>Editor</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.subtitle, { color: colors.primary }]}>
             Audio editing tools
           </Text>
         </View>
@@ -83,19 +87,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.sm,
   },
   header: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
   },
   title: {
-    ...Typography.h1,
+    ...Typography.h2,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     ...Typography.body,
   },
   toolsContainer: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
 });

@@ -1,15 +1,15 @@
 import { FeatureCard } from '@/components/ui/feature-card';
 import { Waveform } from '@/components/ui/waveform';
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/contexts/theme-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useTheme();
+  const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
 
   return (
@@ -27,12 +27,20 @@ export default function HomeScreen() {
               Enhance your audio quality
             </Text>
           </View>
-          <TouchableOpacity
-            style={[styles.crownButton, { backgroundColor: colors.backgroundSecondary }]}
-            onPress={() => router.push('/premium')}
-          >
-            <Ionicons name="trophy" size={24} color={colors.accent} />
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={[styles.headerButton, { backgroundColor: colors.backgroundSecondary }]}
+              onPress={() => router.push('/settings')}
+            >
+              <Ionicons name="settings" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerButton, { backgroundColor: colors.backgroundSecondary }]}
+              onPress={() => router.push('/premium')}
+            >
+              <Ionicons name="trophy" size={24} color={colors.accent} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Demo Audio Card */}
@@ -40,8 +48,9 @@ export default function HomeScreen() {
           style={[
             styles.demoCard,
             {
-              backgroundColor: colors.backgroundSecondary,
-              borderColor: colors.border,
+              backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.05)' : 'rgba(168, 85, 247, 0.03)',
+              borderColor: colors.primaryLight,
+              borderWidth: 1,
             },
           ]}
         >
@@ -95,41 +104,60 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.sm,
+    paddingTop: Spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
+    paddingHorizontal: 0,
   },
   title: {
-    ...Typography.h1,
+    ...Typography.h2,
+    fontWeight: '700',
     marginBottom: Spacing.xs,
+    letterSpacing: -0.5,
   },
   subtitle: {
     ...Typography.body,
+    opacity: 0.7,
   },
-  crownButton: {
+  headerButtons: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  headerButton: {
     width: 48,
     height: 48,
     borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   demoCard: {
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.xl,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   demoHeader: {
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   demoTitle: {
     ...Typography.h4,
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
   },
   playButton: {
     width: 64,
@@ -138,9 +166,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   featuresContainer: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
 });
 

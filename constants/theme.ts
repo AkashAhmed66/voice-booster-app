@@ -20,8 +20,6 @@ const PALETTE = {
   purple900: '#581C87',
   
   // Accent colors
-  orange: '#FF6B35',
-  orangeLight: '#FF8C61',
   pink: '#FF4185',
   pinkLight: '#FF6BA3',
   
@@ -64,8 +62,8 @@ export const Colors = {
     primaryDark: PALETTE.purple700,
     
     // Accent
-    accent: PALETTE.orange,
-    accentLight: PALETTE.orangeLight,
+    accent: PALETTE.purple500,
+    accentLight: PALETTE.purple300,
     
     // UI Elements
     border: PALETTE.gray200,
@@ -108,8 +106,8 @@ export const Colors = {
     primaryDark: PALETTE.purple600,
     
     // Accent
-    accent: PALETTE.orange,
-    accentLight: PALETTE.orangeLight,
+    accent: PALETTE.purple400,
+    accentLight: PALETTE.purple300,
     
     // UI Elements
     border: PALETTE.gray800,

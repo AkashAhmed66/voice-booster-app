@@ -21,8 +21,8 @@ export function VolumeSlider({
   minIcon = 'volume-low',
   maxIcon = 'volume-high',
 }: VolumeSliderProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
 
   return (
     <View

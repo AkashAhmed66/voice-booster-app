@@ -35,8 +35,8 @@ export function Button({
   icon,
   style,
 }: ButtonProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme || 'dark'];
 
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
@@ -58,9 +58,19 @@ export function Button({
     const variantStyles: Record<ButtonVariant, ViewStyle> = {
       primary: {
         backgroundColor: colors.primary,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 4,
       },
       secondary: {
         backgroundColor: colors.accent,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
       },
       outline: {
         backgroundColor: 'transparent',
