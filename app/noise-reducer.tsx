@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NoiseReducerScreen() {
   const { colorScheme } = useColorScheme();
@@ -34,14 +35,16 @@ export default function NoiseReducerScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundSecondary }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Noise Reducer</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity onPress={() => router.push('/premium')}>
+          <Ionicons name="trophy" size={24} color={colors.accent} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -198,7 +201,7 @@ export default function NoiseReducerScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -210,12 +213,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   backButton: {
-    padding: Spacing.xs,
+    padding: 0,
   },
   headerTitle: {
     ...Typography.h3,

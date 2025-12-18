@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ENHANCEMENT_OPTIONS = [
   { id: 'original', label: 'Original' },
@@ -23,7 +24,7 @@ export default function PlayerScreen() {
   const [rating, setRating] = useState(0);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundSecondary }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -126,7 +127,7 @@ export default function PlayerScreen() {
           style={styles.saveButton}
         />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
