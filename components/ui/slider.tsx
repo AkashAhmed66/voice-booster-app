@@ -1,6 +1,7 @@
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -43,17 +44,16 @@ export function VolumeSlider({
       <View style={styles.sliderContainer}>
         <Ionicons name={minIcon} size={24} color={colors.textSecondary} />
         <View style={styles.sliderWrapper}>
-          <View style={[styles.track, { backgroundColor: colors.border }]}>
-            <View
-              style={[
-                styles.fill,
-                {
-                  backgroundColor: colors.primary,
-                  width: `${value}%`,
-                },
-              ]}
-            />
-          </View>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={100}
+            value={value}
+            onValueChange={onValueChange}
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={colors.border}
+            thumbTintColor={colors.primary}
+          />
         </View>
         <Ionicons name={maxIcon} size={24} color={colors.textSecondary} />
       </View>
@@ -88,13 +88,8 @@ const styles = StyleSheet.create({
   sliderWrapper: {
     flex: 1,
   },
-  track: {
-    height: 6,
-    borderRadius: BorderRadius.full,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: BorderRadius.full,
+  slider: {
+    width: '100%',
+    height: 40,
   },
 });

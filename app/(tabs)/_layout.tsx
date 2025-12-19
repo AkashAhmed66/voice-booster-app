@@ -45,11 +45,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="recorder"
         options={{
-          title: 'Editor',
+          title: 'Recorder',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'create' : 'create-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'mic' : 'mic-outline'} size={24} color={color} />
           ),
         }}
       />

@@ -1,24 +1,116 @@
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Audio } from 'expo-av';
+import React, { useEffect } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Waveform } from './waveform';
 
 interface AudioPlayerProps {
-  title?: string;
-  duration?: string;
-  currentTime?: string;
+  audioUri?: string;
+  sound: Audio.Sound | null;
+  setSound: (sound: Audio.Sound | null) => void;
+  isPlaying: boolean;
+  setIsPlaying: (playing: boolean) => void;
+  position: number;
+  setPosition: (pos: number) => void;
+  duration: number;
+  setDuration: (dur: number) => void;
+  volume: number;
 }
 
 export function AudioPlayer({
-  title = 'Demo Audio',
-  duration = '00:00:08',
-  currentTime = '00:00:04',
+  audioUri,
+  sound,
+  setSound,
+  isPlaying,
+  setIsPlaying,
+  position,
+  setPosition,
+  duration,
+  setDuration,
+  volume,
 }: AudioPlayerProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme || 'dark'];
-  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (sound) {
+      sound.setOnPlaybackStatusUpdate(async (status) => {
+        if (status.isLoaded) {
+          setPosition(status.positionMillis);
+          setDuration(status.durationMillis || 0);
+          setIsPlaying(status.isPlaying);
+          
+          if (status.didJustFinish) {
+            setIsPlaying(false);
+            setPosition(0);
+            // Reset the actual playback position so it can be replayed from the start
+            await sound.setPositionAsync(0);
+          }
+        }
+      });
+    }
+  }, [sound]);
+
+  const formatTime = (millis: number) => {
+    const totalSeconds = Math.floor(millis / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const loadAndPlayAudio = async () => {
+    try {
+      if (!audioUri) {
+        Alert.alert('Error', 'No audio file selected');
+        return;
+      }
+
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUri },
+        { shouldPlay: true, volume: volume / 100 }
+      );
+      setSound(newSound);
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('Error loading audio:', error);
+      Alert.alert('Error', 'Failed to load audio file');
+    }
+  };
+
+  const handlePlayPause = async () => {
+    try {
+      if (!sound) {
+        await loadAndPlayAudio();
+        return;
+      }
+
+      if (isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        await sound.playAsync();
+      }
+    } catch (error) {
+      console.error('Error toggling playback:', error);
+    }
+  };
+
+  const handleSkipForward = async () => {
+    if (sound) {
+      const newPosition = Math.min(position + 10000, duration);
+      await sound.setPositionAsync(newPosition);
+    }
+  };
+
+  const handleSkipBackward = async () => {
+    if (sound) {
+      const newPosition = Math.max(position - 10000, 0);
+      await sound.setPositionAsync(newPosition);
+    }
+  };
+
+  const progress = duration > 0 ? (position / duration) * 100 : 0;
 
   return (
     <View style={styles.container}>
@@ -33,7 +125,7 @@ export function AudioPlayer({
           <View
             style={[
               styles.progressFill,
-              { backgroundColor: colors.primary, width: '50%' },
+              { backgroundColor: colors.primary, width: `${progress}%` },
             ]}
           />
         </View>
@@ -41,16 +133,16 @@ export function AudioPlayer({
 
       {/* Playback Controls */}
       <View style={styles.controls}>
-        <Text style={[styles.time, { color: colors.text }]}>{currentTime}</Text>
+        <Text style={[styles.time, { color: colors.text }]}>{formatTime(position)}</Text>
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.controlButton}>
+          <TouchableOpacity style={styles.controlButton} onPress={handleSkipBackward}>
             <Ionicons name="play-back" size={32} color={colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.playButton, { backgroundColor: colors.primary }]}
-            onPress={() => setIsPlaying(!isPlaying)}
+            onPress={handlePlayPause}
           >
             <Ionicons
               name={isPlaying ? 'pause' : 'play'}
@@ -59,12 +151,12 @@ export function AudioPlayer({
             />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton}>
+          <TouchableOpacity style={styles.controlButton} onPress={handleSkipForward}>
             <Ionicons name="play-forward" size={32} color={colors.text} />
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.time, { color: colors.text }]}>{duration}</Text>
+        <Text style={[styles.time, { color: colors.text }]}>{formatTime(duration)}</Text>
       </View>
     </View>
   );

@@ -2,48 +2,163 @@ import { Card } from '@/components/ui/card';
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface AudioFile {
   id: string;
   name: string;
+  uri: string;
   duration: string;
   size: string;
   date: string;
 }
 
-const STATIC_FILES: AudioFile[] = [
-  {
-    id: '1',
-    name: 'Enhanced_Voice_Recording.mp3',
-    duration: '03:24',
-    size: '4.2 MB',
-    date: '2 hours ago',
-  },
-  {
-    id: '2',
-    name: 'Noise_Reduced_Audio.wav',
-    duration: '05:12',
-    size: '8.7 MB',
-    date: 'Yesterday',
-  },
-  {
-    id: '3',
-    name: 'Vocal_Track_Separated.mp3',
-    duration: '04:45',
-    size: '6.1 MB',
-    date: '2 days ago',
-  },
-];
-
 export default function OutputFilesScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
-  const [files] = useState<AudioFile[]>(STATIC_FILES);
+  const [files, setFiles] = useState<AudioFile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadRecordings = async () => {
+    try {
+      // Request permission to access media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant storage permission to view your recordings.');
+        setFiles([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get the VoiceBooster album
+      const album = await MediaLibrary.getAlbumAsync('VoiceBooster');
+      if (!album) {
+        console.log('VoiceBooster album does not exist yet');
+        setFiles([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get all assets from the album
+      const albumAssets = await MediaLibrary.getAssetsAsync({
+        album: album,
+        mediaType: MediaLibrary.MediaType.audio,
+        sortBy: MediaLibrary.SortBy.creationTime,
+      });
+
+      // Format the assets for display
+      const recordings: AudioFile[] = await Promise.all(
+        albumAssets.assets.map(async (asset) => {
+          const durationInSeconds = Math.floor(asset.duration);
+          const mins = Math.floor(durationInSeconds / 60);
+          const secs = durationInSeconds % 60;
+          const formattedDuration = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+          // Get detailed file info using getAssetInfoAsync
+          let fileSize = '0.00 MB';
+          let fileDate = new Date(asset.creationTime).toISOString();
+          
+          try {
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+            
+            // Get accurate file size
+            if (assetInfo.localUri) {
+              const fileInfo = await FileSystem.getInfoAsync(assetInfo.localUri);
+              if (fileInfo.exists && 'size' in fileInfo) {
+                const sizeInMB = fileInfo.size / (1024 * 1024);
+                if (sizeInMB < 0.01) {
+                  // Show in KB if less than 0.01 MB
+                  fileSize = (fileInfo.size / 1024).toFixed(2) + ' KB';
+                } else {
+                  fileSize = sizeInMB.toFixed(2) + ' MB';
+                }
+              }
+              
+              // Get accurate modification time
+              if ('modificationTime' in fileInfo && fileInfo.modificationTime) {
+                fileDate = new Date(fileInfo.modificationTime * 1000).toISOString();
+              }
+            }
+          } catch (error) {
+            console.log('Could not get file info for', asset.filename);
+          }
+
+          return {
+            id: asset.id,
+            name: asset.filename,
+            uri: asset.uri,
+            duration: formattedDuration,
+            size: fileSize,
+            date: fileDate,
+          };
+        })
+      );
+
+      // Sort by date (newest first)
+      recordings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setFiles(recordings);
+    } catch (error) {
+      console.error('Failed to load recordings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / 60000);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  const deleteRecording = async (file: AudioFile) => {
+    Alert.alert(
+      'Delete Recording',
+      `Are you sure you want to delete ${file.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Delete the asset from media library
+              await MediaLibrary.deleteAssetsAsync([file.id]);
+              
+              // Reload the recordings list
+              await loadRecordings();
+            } catch (error) {
+              console.error('Failed to delete recording:', error);
+              Alert.alert('Error', 'Failed to delete recording');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadRecordings();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
@@ -71,7 +186,10 @@ export default function OutputFilesScreen() {
             {files.map((file, index) => (
               <Card
                 key={file.id}
-                onPress={() => router.push('/player')}
+                onPress={() => router.push({
+                  pathname: '/player',
+                  params: { audioUri: file.uri, fileName: file.name }
+                })}
                 style={[styles.fileCard, {
                   borderColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : colors.border
                 }]}
@@ -104,11 +222,16 @@ export default function OutputFilesScreen() {
                       </Text>
                     </View>
                     <Text style={[styles.fileDate, { color: colors.textTertiary }]}>
-                      {file.date}
+                      {getTimeAgo(file.date)}
                     </Text>
                   </View>
 
-                  <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+                  <TouchableOpacity 
+                    onPress={() => deleteRecording(file)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons name="trash-outline" size={20} color={colors.accent} />
+                  </TouchableOpacity>
                 </View>
               </Card>
             ))}
@@ -118,7 +241,7 @@ export default function OutputFilesScreen() {
             <Ionicons name="folder-open-outline" size={80} color={colors.textTertiary} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>No files yet</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              Processed audio files will appear here
+              Your recordings will appear here
             </Text>
           </View>
         )}
@@ -197,5 +320,8 @@ const styles = StyleSheet.create({
   emptyText: {
     ...Typography.body,
     textAlign: 'center',
+  },
+  deleteButton: {
+    padding: Spacing.xs,
   },
 });

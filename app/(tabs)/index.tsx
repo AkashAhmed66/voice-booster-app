@@ -63,7 +63,7 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity
             style={[styles.playButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/player')}
+            onPress={() => router.push({ pathname: '/audio-preview', params: { processType: 'demo' } })}
           >
             <Ionicons name="play" size={32} color={colors.background} />
           </TouchableOpacity>
@@ -72,23 +72,16 @@ export default function HomeScreen() {
         {/* Feature Cards */}
         <View style={styles.featuresContainer}>
           <FeatureCard
-            title="Noise Reducer"
-            icon={<Ionicons name="mic-off" size={28} color={colors.primary} />}
+            title="Denoiser"
+            icon={<Ionicons name="cut" size={28} color={colors.primary} />}
             onPress={() => router.push('/noise-reducer')}
             backgroundColor={colors.card}
           />
 
           <FeatureCard
-            title="Split Music & Vocal"
-            icon={<Ionicons name="musical-notes" size={28} color={colors.primary} />}
-            onPress={() => router.push('/split-audio')}
-            backgroundColor={colors.card}
-          />
-
-          <FeatureCard
-            title="Record Audio"
-            icon={<Ionicons name="mic" size={28} color={colors.accent} />}
-            onPress={() => router.push('/record')}
+            title="Voice Booster"
+            icon={<Ionicons name="mic-circle" size={28} color={colors.accent} />}
+            onPress={() => router.push('/voice-booster')}
             backgroundColor={colors.card}
           />
         </View>

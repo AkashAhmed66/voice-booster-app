@@ -22,6 +22,8 @@ function RootLayoutNav() {
         <Stack.Screen name="settings" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="player" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="noise-reducer" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen name="voice-booster" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen name="audio-preview" options={{ presentation: 'modal', headerShown: false }} />
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </NavigationThemeProvider>

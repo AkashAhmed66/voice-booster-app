@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function NoiseReducerScreen() {
+export default function VoiceBoosterScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function NoiseReducerScreen() {
           clearInterval(interval);
           setProcessing(false);
           // Navigate to audio preview screen
-          setTimeout(() => router.push({ pathname: '/audio-preview', params: { processType: 'denoise' } }), 500);
+          setTimeout(() => router.push({ pathname: '/audio-preview', params: { processType: 'boost' } }), 500);
           return 100;
         }
         return prev + 5;
@@ -41,7 +41,7 @@ export default function NoiseReducerScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Noise Reducer</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Voice Booster</Text>
         <TouchableOpacity onPress={() => router.push('/premium')}>
           <Ionicons name="trophy" size={24} color={colors.accent} />
         </TouchableOpacity>
@@ -62,21 +62,21 @@ export default function NoiseReducerScreen() {
             padding: Spacing.lg
           }]}>
             <View style={[styles.progressCircle, {
-              borderColor: colors.primary,
+              borderColor: colors.accent,
               backgroundColor: colorScheme === 'dark'
                 ? 'rgba(168, 85, 247, 0.1)'
                 : 'rgba(168, 85, 247, 0.05)'
             }]}>
-              <Text style={[styles.progressText, { color: colors.primary }]}>
+              <Text style={[styles.progressText, { color: colors.accent }]}>
                 {progress.toFixed(0)}%
               </Text>
             </View>
 
             <Text style={[styles.processingTitle, { color: colors.text }]}>
-              Say Goodbye to noise!
+              Amplify your voice!
             </Text>
-            <Text style={[styles.processingSubtitle, { color: colors.primary }]}>
-              Let us denoise your audio for crystal-clear sounds!
+            <Text style={[styles.processingSubtitle, { color: colors.accent }]}>
+              Let us boost your audio for powerful sounds!
             </Text>
 
             <Button
@@ -99,12 +99,12 @@ export default function NoiseReducerScreen() {
             {/* Upload Card */}
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
-                <Ionicons name="cloud-upload-outline" size={80} color={colors.primary} />
+                <Ionicons name="cloud-upload-outline" size={80} color={colors.accent} />
                 <Text style={[styles.uploadTitle, { color: colors.text }]}>
                   Select Audio File
                 </Text>
                 <Text style={[styles.uploadSubtitle, { color: colors.textSecondary }]}>
-                  Choose an audio file to reduce noise
+                  Choose an audio file to boost voice
                 </Text>
                 <Button
                   title="Browse Files"
@@ -134,7 +134,7 @@ export default function NoiseReducerScreen() {
                       },
                     ]}
                   >
-                    <Ionicons name="document-text" size={24} color={colors.primary} />
+                    <Ionicons name="document-text" size={24} color={colors.accent} />
                   </View>
                   <View style={styles.infoText}>
                     <Text style={[styles.infoItemTitle, { color: colors.text }]}>
@@ -162,7 +162,7 @@ export default function NoiseReducerScreen() {
                       2. AI Processing
                     </Text>
                     <Text style={[styles.infoItemText, { color: colors.textSecondary }]}>
-                      Our AI removes background noise automatically
+                      Our AI amplifies voice levels automatically
                     </Text>
                   </View>
                 </View>
@@ -173,29 +173,29 @@ export default function NoiseReducerScreen() {
                   <View
                     style={[
                       styles.infoIcon,
-                      { backgroundColor: colors.primary + '20' },
+                      { backgroundColor: colors.accent + '20' },
                     ]}
                   >
-                    <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                    <Ionicons name="checkmark-circle" size={24} color={colors.accent} />
                   </View>
                   <View style={styles.infoText}>
                     <Text style={[styles.infoItemTitle, { color: colors.text }]}>
                       3. Download Result
                     </Text>
                     <Text style={[styles.infoItemText, { color: colors.textSecondary }]}>
-                      Get your crystal-clear audio file
+                      Get your amplified audio file
                     </Text>
                   </View>
                 </View>
               </Card>
             </View>
 
-            {/* Denoise Button */}
+            {/* Boost Button */}
             <Button
-              title="Denoise Audio"
+              title="Boost Voice"
               onPress={handleProcess}
               fullWidth
-              icon={<Ionicons name="cut" size={20} color={colors.background} />}
+              icon={<Ionicons name="mic-circle" size={20} color={colors.background} />}
             />
           </View>
         )}
@@ -292,6 +292,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
+    borderWidth: 8,
   },
   progressText: {
     ...Typography.h1,
