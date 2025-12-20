@@ -1,9 +1,13 @@
 import { AudioPlayer } from '@/components/ui/audio-player';
 import { Button } from '@/components/ui/button';
+import { API_BASE_URL } from '@/constants/api';
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { downloadProcessedAudio } from '@/services/audio-api';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -14,7 +18,10 @@ export default function AudioPreviewScreen() {
   const colors = Colors[colorScheme || 'dark'];
   const router = useRouter();
   const params = useLocalSearchParams();
-  const processType = params.processType as string; // 'denoise' or 'boost'
+  const processType = params.processType as string; // 'denoise', 'boost', or 'demo'
+  const originalUri = params.originalUri as string;
+  const originalName = params.originalName as string;
+  const processedUrl = params.processedUrl as string;
   
   const [originalSound, setOriginalSound] = useState<Audio.Sound | null>(null);
   const [processedSound, setProcessedSound] = useState<Audio.Sound | null>(null);
@@ -24,6 +31,51 @@ export default function AudioPreviewScreen() {
   const [processedPosition, setProcessedPosition] = useState(0);
   const [originalDuration, setOriginalDuration] = useState(0);
   const [processedDuration, setProcessedDuration] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [processedLocalUri, setProcessedLocalUri] = useState<string | null>(null);
+  const [isLoadingProcessed, setIsLoadingProcessed] = useState(false);
+
+  // Download processed audio to private folder on mount
+  useEffect(() => {
+    const downloadProcessed = async () => {
+      if (!processedUrl) return;
+
+      try {
+        setIsLoadingProcessed(true);
+        
+        // Create full URL by prepending API base URL
+        const fullUrl = processedUrl.startsWith('http') 
+          ? processedUrl 
+          : `${API_BASE_URL}${processedUrl}`;
+        
+        // Download to private app directory
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const audioType = processType === 'denoise' ? 'denoised' : 'boosted';
+        const fileName = `${audioType}_${timestamp}.wav`;
+        const privateDir = `${FileSystem.documentDirectory}VoiceBooster/`;
+        
+        // Ensure directory exists
+        const dirInfo = await FileSystem.getInfoAsync(privateDir);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(privateDir, { intermediates: true });
+        }
+
+        const localPath = privateDir + fileName;
+        
+        // Download file
+        await downloadProcessedAudio(fullUrl, privateDir, fileName);
+        
+        setProcessedLocalUri(localPath);
+        setIsLoadingProcessed(false);
+      } catch (error: any) {
+        console.error('Error downloading processed audio:', error);
+        setIsLoadingProcessed(false);
+        Alert.alert('Download Failed', 'Failed to load processed audio for preview.');
+      }
+    };
+
+    downloadProcessed();
+  }, [processedUrl, processType]);
 
   useEffect(() => {
     return () => {
@@ -36,65 +88,95 @@ export default function AudioPreviewScreen() {
     };
   }, [originalSound, processedSound]);
 
-  const handleSave = () => {
-    const audioType = processType === 'demo' ? 'demo' : processType === 'denoise' ? 'denoised' : 'boosted';
-    Alert.alert(
-      'Save Enhanced Audio',
-      `Your ${audioType} audio has been saved successfully!`,
-      [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+  const handleSave = async () => {
+    if (!processedLocalUri) {
+      Alert.alert('Error', 'No processed audio available to save');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      // Request permission to access media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant storage permission to save the enhanced audio.');
+        setIsSaving(false);
+        return;
+      }
+
+      // Save the already downloaded file to device's public media library
+      const asset = await MediaLibrary.createAssetAsync(processedLocalUri);
+      
+      // Create or get the VoiceBooster album
+      const album = await MediaLibrary.getAlbumAsync('VoiceBooster');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('VoiceBooster', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      setIsSaving(false);
+
+      const audioType = processType === 'denoise' ? 'denoised' : 'boosted';
+
+      Alert.alert(
+        'Success!',
+        `Your ${audioType} audio has been saved to the VoiceBooster album in your device gallery.`,
+        [
+          {
+            text: 'View Files',
+            onPress: () => router.replace('/(tabs)/output-files'),
+          },
+          {
+            text: 'Done',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('Error saving audio:', error);
+      setIsSaving(false);
+      Alert.alert('Save Failed', error.message || 'Failed to save the enhanced audio. Please try again.');
+    }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={[styles.header, { borderBottomColor: colors.card }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {processType === 'demo' ? 'Demo' : processType === 'denoise' ? 'Denoised' : 'Boosted'} Preview
-        </Text>
-        <TouchableOpacity onPress={() => router.push('/premium')}>
-          <Ionicons name="trophy" size={24} color={colors.accent} />
-        </TouchableOpacity>
+        <Text style={[styles.title, { color: colors.text }]}>Audio Preview</Text>
+        <View style={styles.placeholder} />
       </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Comparison Header */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Compare Results
-        </Text>
-        <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-          Listen to the difference between original and enhanced audio
-        </Text>
-
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {/* Original Audio Player */}
         <View style={[styles.audioCard, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeader}>
             <Ionicons name="musical-notes" size={24} color={colors.textSecondary} />
             <Text style={[styles.cardTitle, { color: colors.text }]}>Original Audio</Text>
           </View>
-          <AudioPlayer 
-            audioUri="" // For now using empty, replace with actual URI
-            sound={originalSound}
-            setSound={setOriginalSound}
-            isPlaying={isPlayingOriginal}
-            setIsPlaying={setIsPlayingOriginal}
-            position={originalPosition}
-            setPosition={setOriginalPosition}
-            duration={originalDuration}
-            setDuration={setOriginalDuration}
-          />
+          {originalUri ? (
+            <AudioPlayer 
+              audioUri={originalUri}
+              sound={originalSound}
+              setSound={setOriginalSound}
+              isPlaying={isPlayingOriginal}
+              setIsPlaying={setIsPlayingOriginal}
+              position={originalPosition}
+              setPosition={setOriginalPosition}
+              duration={originalDuration}
+              setDuration={setOriginalDuration}
+              volume={100}
+            />
+          ) : (
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No original audio available
+            </Text>
+          )}
         </View>
 
         {/* Processed Audio Player */}
@@ -124,27 +206,43 @@ export default function AudioPreviewScreen() {
               </Text>
             </View>
           </View>
-          <AudioPlayer 
-            audioUri="" // For now using empty, replace with actual URI
-            sound={processedSound}
-            setSound={setProcessedSound}
-            isPlaying={isPlayingProcessed}
-            setIsPlaying={setIsPlayingProcessed}
-            position={processedPosition}
-            setPosition={setProcessedPosition}
-            duration={processedDuration}
-            setDuration={setProcessedDuration}
-          />
+          {isLoadingProcessed ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                Loading enhanced audio...
+              </Text>
+            </View>
+          ) : processedLocalUri ? (
+            <AudioPlayer 
+              audioUri={processedLocalUri}
+              sound={processedSound}
+              setSound={setProcessedSound}
+              isPlaying={isPlayingProcessed}
+              setIsPlaying={setIsPlayingProcessed}
+              position={processedPosition}
+              setPosition={setProcessedPosition}
+              duration={processedDuration}
+              setDuration={setProcessedDuration}
+              volume={100}
+            />
+          ) : (
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No enhanced audio available
+            </Text>
+          )}
         </View>
 
         {/* Save Button */}
-        <Button
-          title="Save Enhanced Audio"
-          onPress={handleSave}
-          fullWidth
-          icon={<Ionicons name="save" size={20} color={colors.background} />}
-          style={styles.saveButton}
-        />
+        {processedLocalUri && !isLoadingProcessed && (
+          <Button
+            title={isSaving ? 'Saving...' : 'Save Enhanced Audio'}
+            onPress={handleSave}
+            disabled={isSaving}
+            fullWidth
+            icon={<Ionicons name="save" size={20} color={colors.background} />}
+            style={styles.saveButton}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -198,6 +296,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
     marginBottom: Spacing.md,
+  },
+  emptyText: {
+    ...Typography.body,
+    textAlign: 'center',
+    padding: Spacing.lg,
+  },
+  loadingContainer: {
+    padding: Spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    ...Typography.body,
+    textAlign: 'center',
   },
   cardTitle: {
     ...Typography.h4,

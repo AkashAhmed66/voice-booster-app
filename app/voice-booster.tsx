@@ -2,10 +2,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { BorderRadius, Colors, Spacing, Typography } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { boostAudio, BoostMode } from '@/services/audio-api';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function VoiceBoosterScreen() {
@@ -14,24 +17,105 @@ export default function VoiceBoosterScreen() {
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<{ uri: string; name: string } | null>(null);
+  const [isCancelled, setIsCancelled] = useState(false);
 
-  const handleProcess = () => {
+  const getRecordingsDirectory = async () => {
+    const folderName = 'VoiceBooster';
+    const recordingsDir = `${FileSystem.documentDirectory!}${folderName}/`;
+    
+    // Check if directory exists, if not create it
+    const dirInfo = await FileSystem.getInfoAsync(recordingsDir);
+    if (!dirInfo.exists) {
+      await FileSystem.makeDirectoryAsync(recordingsDir, { intermediates: true });
+      console.log('Created recordings directory:', recordingsDir);
+    }
+    
+    return recordingsDir;
+  };
+
+  const pickAudioFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setSelectedFile({
+          uri: file.uri,
+          name: file.name,
+        });
+        Alert.alert('File Selected', `${file.name} is ready for processing`);
+      }
+    } catch (error) {
+      console.error('Error picking file:', error);
+      Alert.alert('Error', 'Failed to select audio file');
+    }
+  };
+
+  const handleProcess = async () => {
+    if (!selectedFile) {
+      Alert.alert('No File Selected', 'Please select an audio file first');
+      return;
+    }
+
     setProcessing(true);
     setProgress(0);
+    setIsCancelled(false);
 
-    // Simulate processing
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setProcessing(false);
-          // Navigate to audio preview screen
-          setTimeout(() => router.push({ pathname: '/audio-preview', params: { processType: 'boost' } }), 500);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 200);
+    try {
+      // Simulate progress for upload (0-30%)
+      const uploadInterval = setInterval(() => {
+        setProgress((prev) => Math.min(prev + 2, 30));
+      }, 100);
+
+      // Call the boost API
+      const response = await boostAudio(
+        selectedFile.uri,
+        '1' as BoostMode // Default to moderate boost, you can add UI to select this
+      );
+
+      clearInterval(uploadInterval);
+      
+      if (isCancelled) {
+        setProcessing(false);
+        return;
+      }
+
+      setProgress(100);
+
+      // Navigate to preview with both original and processed URLs
+      setTimeout(() => {
+        setProcessing(false);
+        setProgress(0);
+        router.push({
+          pathname: '/audio-preview',
+          params: {
+            processType: 'boost',
+            originalUri: selectedFile.uri,
+            originalName: selectedFile.name,
+            processedUrl: response.processed_audio,
+            responseId: response.id,
+          },
+        });
+      }, 500);
+    } catch (error: any) {
+      console.error('Error processing audio:', error);
+      setProcessing(false);
+      setProgress(0);
+      Alert.alert(
+        'Processing Failed',
+        error.message || 'Failed to process audio. Please try again.'
+      );
+    }
+  };
+
+  const handleCancel = () => {
+    setIsCancelled(true);
+    setProcessing(false);
+    setProgress(0);
   };
 
   return (
@@ -81,10 +165,7 @@ export default function VoiceBoosterScreen() {
 
             <Button
               title="Cancel"
-              onPress={() => {
-                setProcessing(false);
-                setProgress(0);
-              }}
+              onPress={handleCancel}
               variant="outline"
               style={styles.cancelButton}
             />
@@ -101,16 +182,14 @@ export default function VoiceBoosterScreen() {
               <View style={styles.uploadContent}>
                 <Ionicons name="cloud-upload-outline" size={80} color={colors.accent} />
                 <Text style={[styles.uploadTitle, { color: colors.text }]}>
-                  Select Audio File
+                  {selectedFile ? 'File Selected' : 'Select Audio File'}
                 </Text>
                 <Text style={[styles.uploadSubtitle, { color: colors.textSecondary }]}>
-                  Choose an audio file to boost voice
+                  {selectedFile ? selectedFile.name : 'Choose an audio file from your device'}
                 </Text>
                 <Button
-                  title="Browse Files"
-                  onPress={() => {
-                    // File picker would go here
-                  }}
+                  title={selectedFile ? 'Change File' : 'Browse Files'}
+                  onPress={pickAudioFile}
                   style={styles.browseButton}
                 />
               </View>
@@ -120,9 +199,16 @@ export default function VoiceBoosterScreen() {
             <View style={styles.infoContainer}>
               <Text style={[styles.infoTitle, { color: colors.text }]}>How it works</Text>
 
-              <Card style={[styles.infoCard, {
-                borderColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : colors.border
-              }]}>
+              <Card
+                style={
+                  [
+                    styles.infoCard,
+                    {
+                      borderColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : colors.border,
+                    },
+                  ] as any
+                }
+              >
                 <View style={styles.infoItem}>
                   <View
                     style={[
@@ -315,5 +401,42 @@ const styles = StyleSheet.create({
     ...Typography.bodySmall,
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  listTitle: {
+    ...Typography.h3,
+  },
+  recordingsList: {
+    paddingBottom: Spacing.xl,
+  },
+  recordingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  recordingName: {
+    ...Typography.body,
+    flex: 1,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl * 2,
+  },
+  emptyText: {
+    ...Typography.h4,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+  },
+  emptySubtext: {
+    ...Typography.bodySmall,
+    textAlign: 'center',
   },
 });
